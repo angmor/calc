@@ -1,13 +1,8 @@
 import java.util.Scanner;
 public class Main {
 
-    public static void main(String[] args) {
-        int result = 0;
-        String a = "";
-        String b = "";
-        boolean a_arab = true; //"маркеры" типа чисел
-        boolean b_arab = true;
-        char ch = ' '; //тут храним пробел или будущий знак
+    public static void main(String[] args) throws CalcException {
+
 
         Scanner scanIn = new Scanner(System.in);
         System.out.println("Введите арабские или римские числа от 1 до 10 и нужную операцию (*,/,-,+)");
@@ -15,6 +10,16 @@ public class Main {
         String str1 = str0.toUpperCase(); //правим регистр
         String str2 = str1.replaceAll(" ", ""); // заменяем пробелы
 
+        System.out.println(LogicInside(str2));
+    }
+
+    public static String LogicInside(String str2) throws CalcException {
+        int result = 0;
+        String a = "";
+        String b = "";
+        boolean a_arab = true; //"маркеры" типа чисел
+        boolean b_arab = true;
+        char ch = ' '; //тут храним пробел или будущий знак
         for (int i = 0; i < str2.length(); i++) { //проходим по всей длине строки str2
             switch (str2.charAt(i)) {
                 case 'I': case 'V': case 'X':
@@ -24,8 +29,7 @@ public class Main {
 
                         int at = RomanToArabian(a);
                         if (at > 10) {
-                            System.out.print("Ошибка! Первое значение больше 10.");
-                            System.exit(0);
+                            throw new CalcException("Введено значение больше 10");
                         }
                     } else {
                         b += str2.charAt(i);
@@ -33,8 +37,7 @@ public class Main {
 
                         int bt = RomanToArabian(b);
                         if (bt > 10) {
-                            System.out.print("Ошибка! Второе значение больше 10.");
-                            System.exit(0);
+                            throw new CalcException("Ошибка! Второе значение больше 10.");
                         }
                     }
                     break;
@@ -43,15 +46,13 @@ public class Main {
                     if (ch == ' ') {
                         ch = str2.charAt(i);
                     } else {
-                        System.out.print("Ошибка! Математических знаков больше одного.");
-                        System.exit(0);
+                        throw new CalcException("Ошибка! Математических знаков больше одного.");
                     }
                     break;
 
                 case '.': case ',':
-                    System.out.print("Ошибка! Допустимы только целые числа.");
-                    System.exit(0);
-                    break;
+                    throw new CalcException("Ошибка! Допустимы только целые числа.");
+
 
                 default:
                     try {if (ch == ' ') {
@@ -59,37 +60,34 @@ public class Main {
 
                         int at = Integer.parseInt(a.trim());
                         if (at > 10) {
-                            System.out.print("Ошибка! Первое значение больше 10.");
-                            System.exit(0);
+                            throw new CalcException("Ошибка! Первое значение больше 10.");
                         }
                     } else {
                         b += str2.charAt(i);
 
                         int bt = Integer.parseInt(b.trim());
                         if (bt > 10) {
-                            System.out.print("Ошибка! Второе значение больше 10.");
-                            System.exit(0);
+                            throw new CalcException("Ошибка! Второе значение больше 10.");
                         } break;
                     }
-//Тут ловим непредусмотренную ошибку ввода чего угодно, кроме нужных нам символов
+
                     } catch (NumberFormatException e) {
-                        System.out.println("Ошибка! Недопустимый символ.");
-                        System.exit(0);
+                        throw new CalcException("Ошибка! Недопустимый символ.");
                     }
             }
         }
 
         if (ch == ' ') {
-            System.out.print("Ошибка! Нет математических знаков.");
-            System.exit(0);
+            throw new CalcException("Ошибка! Нет математических знаков.");
         } else {
             if (a_arab && b_arab) {
                 int at = Integer.parseInt(a.trim());
                 int bt = Integer.parseInt(b.trim());
 
                 result = calc(at, bt, ch);
+                String resultStr = Integer.toString(result);
 
-                System.out.print(result);
+                return resultStr;
             }
 
             if (!a_arab && !b_arab) {
@@ -98,18 +96,19 @@ public class Main {
 
                 result = calc(at, bt, ch);
                 if (result < 0) {
-                    System.out.print("Ошибка! Римские цифры не могут быть отрицательными.");
-                    System.exit(0);
+                    throw new CalcException("Ошибка! Римские цифры не могут быть отрицательными.");
                 }
 
-                System.out.print(ConvertArabianToRoman(result));
+              return ConvertArabianToRoman(result);
             }
 
             if ((a_arab && !b_arab) || (!a_arab && b_arab)) {
-                System.out.print("Ошибка! Разные типы значений.");
-                System.exit(0);
+                throw new CalcException("Ошибка! Разные типы значений.");
             }
         }
+        return null;
+
+
     }
 
     private static String ConvertArabianToRoman (int arabian) {
@@ -121,7 +120,7 @@ public class Main {
                 "LXXXI", "LXXXII", "LXXXIII", "LXXXIV", "LXXXV", "LXXXVI", "LXXXVII", "LXXXVIII", "LXXXIX", "XC",
                 "XCI", "XCII", "XCIII", "XCIV", "XCV", "XCVI", "XCVII", "XCVIII", "XCIX", "C"
         };
-        // String s = roman[arabian];
+
         return roman[arabian];
     }
 
@@ -139,7 +138,7 @@ public class Main {
         return result;
     }
 
-    private static int RomanToArabian (String roman) {
+    private static int RomanToArabian (String roman) throws CalcException {
         int num = 0;
         switch (roman) {
             case "I": num = 1; break;
@@ -153,11 +152,19 @@ public class Main {
             case "IX": num = 9; break;
             case "X": num = 10; break;
             default:
-                System.out.print("Ошибка! Недопустимое знаничение или одно из чисел больше 10.");
-                System.exit(0);
-                break;
+                throw new CalcException("Ошибка! Римские цифры не могут быть отрицательными.");
         }
 
         return num;
+
+
+
+
     }
+
+    public static class CalcException extends Exception {
+        public CalcException(String text) {super(text);}
+
+    }
+
 }
